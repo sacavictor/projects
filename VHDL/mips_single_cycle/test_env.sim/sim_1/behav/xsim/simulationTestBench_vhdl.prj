@@ -1,0 +1,9 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../test_env.srcs/sources_1/new/SSD.vhd" \
+"../../../../test_env.srcs/sources_1/new/mpg.vhd" \
+"../../../../test_env.srcs/sources_1/new/test_env.vhd" \
+"../../../../test_env.srcs/sim_1/new/simulationTestBench.vhd" \
+
+# Do not sort compile order
+nosort

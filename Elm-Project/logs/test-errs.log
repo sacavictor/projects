@@ -1,0 +1,18 @@
+-- UNEXPECTED SYMBOL - C:\Users\User\Documents\pf\Elm-Project\src\Model\Post.elm
+
+I am getting stuck because this line starts with the { symbol:
+
+35| {-| Decoder for the `Post` type. -}
+    ^
+When a line has no spaces at the beginning, I expect it to be a declaration like
+one of these:
+
+    greet : String -> String
+    greet name =
+      "Hello " ++ name ++ "!"
+    
+    type User = Anonymous | LoggedIn String
+
+If this is not supposed to be a declaration, try adding some spaces before it?
+
+`elm make` failed with exit code 1.

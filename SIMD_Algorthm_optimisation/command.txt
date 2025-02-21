@@ -1,0 +1,1 @@
+cd "c:\Users\User\Documents\SSC\ProiectSSC\" ; if ($?) { gcc simdIntel.c -march=native -O3 -o simdIntel } ; if ($?) { .\simdIntel }

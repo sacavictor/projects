@@ -1,0 +1,84 @@
+<html>
+<head>
+	<title>Afisare Rezultate</title>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afisare Rezultate</title>
+    <style>
+        
+    body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(90deg, #141e30 10%, #243b55 90%);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background: #192a3e;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    padding: 40px;
+    text-align: center;
+    color: #66fcf1;
+}
+
+h1 {
+    color: #bbe1fa;
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    margin-bottom: 15px;
+}
+
+a {
+    text-decoration: none;
+    color: #45a29e;
+    font-weight: bold;
+    transition: color 0.3s ease;
+    background-color: #1f2833;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+a:hover {
+    color: #c5c6c7;
+}
+    </style>
+</head>
+
+
+<body>
+	<h1><u>Afisare inregistrari</u></h1>
+	<form action="results.php" method="post">
+
+	<h1>Meniu Interogari</h1>
+		<ul>
+			<li><a href="results.php?idx=1">Imprimantele Color</a></li>
+			<li><a href="results.php?idx=2">Laptop-uri cu diagonala minima de 5.60</a></li>
+			<li><a href="results.php?idx=3">Imprimante laser color</a></li>
+			<li><a href="results.php?idx=4">Perechi de PC</a></li>
+			<li><a href="results.php?idx=5">Imprimante care au pretul exact la fel ca cel cu numarul modelului 123</a></li>
+			<li><a href="results.php?idx=6">Modelul PC-ului cu pretul minim</a></li>
+			<li><a href="results.php?idx=7">Pretul mediu al imprimantelor in functie de tip</a></li>
+			<li><a href="results.php?idx=8">Producatorul de laptop-uri cu pretul cel mai mare</a></li>
+		</ul>
+
+	</form>
+	
+</body>
+</html>

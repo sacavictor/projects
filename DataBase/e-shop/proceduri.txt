@@ -1,0 +1,59 @@
+DELIMITER $$
+CREATE PROCEDURE `LaptopDiag`()
+select *
+from Laptop
+where ecran = 5.60
+order by viteza asc, hd desc$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE `LaptopPretMax`()
+select fabricant
+from produs
+where pret = (select max(pret) from produs)$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE `ModelPCPretMin`()
+select model
+from produs
+where pret = (select min(pret) from produs where categorie = 'PC')$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE `imprimantaColor`()
+select *
+from Imprimanta
+where CULOARE = 'D'
+order by tip$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE `imprimantaLaserColor`()
+select i.MODEL, p.FABRICANT, p.PRET
+from produs p join imprimanta i on p.model = i.model
+where i.tip = 'Laser' and i.culoare = 'D'
+order by pret$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE `imprimantaPretModel`()
+select *
+from imprimanta i join produs pr on (i.model = pr.model)
+where pr.pret in (select pret from produs where model = 123)$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE `perechiPC`()
+select p1.model, p2.model
+from produs p1
+join produs p2 on p1.fabricant = p2.fabricant and p1.model < p2.model
+where p1.categorie = 'PC' AND P2.CATEGORIE = 'PC'$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE `pretMediuImprimantaTip`()
+select tip, avg(p.pret)
+from produs p join imprimanta i on (p.model = i.model)
+group by i.tip$$
+DELIMITER ;

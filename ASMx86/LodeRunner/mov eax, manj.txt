@@ -1,0 +1,36 @@
+mov eax, manj
+	mov ebx, draw_width
+	mul ebx
+	mov ebx, eax
+	mov eax, matrix_width
+	mov ecx, mani
+	mul ecx
+	add eax, ebx
+	add eax, y0
+
+
+mov eax, [arg2 + ebp]
+	cmp eax, button_right_x
+	jl left
+	cmp eax, button_right_x + 2*draw_width
+	jg nope
+	
+	mov eax, [ebp + arg3]
+	cmp eax, button_right_y
+	jl up
+	cmp eax, button_right_y + 2*draw_height
+	jg down
+
+inc manj
+	mov eax, manj
+	mov ebx, draw_height
+	mul ebx
+	mov ecx, eax
+	add ecx, x0 
+	
+	mov eax, mani
+	mov ebx, draw_width
+	mul ebx
+	mov edx, eax
+	add edx, y0
+	fundal_macro 4, area, ecx, edx
