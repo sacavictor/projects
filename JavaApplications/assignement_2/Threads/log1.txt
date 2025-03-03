@@ -1,0 +1,7 @@
+(ID=1, 16, 2, 2)
+(ID=0, 31, 2, 2)
+(ID=2, 31, 4, 3)
+(ID=3, 49, 3, 2)
+Peak hour: -1
+Average waiting time: 17.375
+Average service time: 0.4230769230769231
