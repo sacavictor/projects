@@ -1,0 +1,222 @@
+version: "3.9"
+
+services:
+
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8081:8080"   # Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/traefik.yml:/etc/traefik/traefik.yml:ro"
+    networks:
+      - sd
+    labels:
+      - "traefik.docker.network=sd"
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.basicauth.basicauth.users=victor:$$2y$$05$$gw5xRd38I44e67mlIWlKpu25GuabbSfKFTd2McInDMT2toRHcF4yW"
+
+
+
+  person-db:
+    image: postgres
+    container_name: person-db
+    environment:
+      POSTGRES_DB: persons
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - person-db:/var/lib/postgresql/data/pgdata/
+    ports:
+      - "5433:5432"
+    networks:
+      - sd
+
+  device-db:
+    image: postgres
+    container_name: device-db
+    environment:
+      POSTGRES_DB: devices
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - device-db:/var/lib/postgresql/data/pgdata/
+    ports:
+      - "5434:5432"
+    networks:
+      - sd
+
+
+  monitoring-db:
+    image: postgres
+    container_name: monitoring-db
+    environment:
+      POSTGRES_DB: monitoring
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - monitoring-db:/var/lib/postgresql/data/pgdata/
+    ports:
+      - "5435:5432"
+    networks:
+      - sd
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # Protocol Port
+      - "15672:15672"    # Management UI (http://localhost:15672)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - sd
+
+  load-balancer-service:
+    build: ./load-balancer-service
+    depends_on:
+      - rabbitmq
+    environment:
+      - TOTAL_REPLICAS=3
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - PORT=8085
+    deploy:
+      replicas: 1
+    networks:
+      - sd
+
+  web-socket-service:
+    build: ./web-socket-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      PORT: 8082
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=sd"
+      - "traefik.http.routers.websocket.rule=PathPrefix(`/ws`)"
+      - "traefik.http.routers.websocket.entrypoints=web"
+      - "traefik.http.services.websocket.loadbalancer.server.port=8082"
+      - "traefik.http.routers.websocket.priority=100"
+    networks:
+      - sd
+
+  customer-support-service:
+    build: ./customer-support-service
+    depends_on:
+      - rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      PORT: 8084
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=sd"
+      - "traefik.http.routers.customersupport.rule=PathPrefix(`/chat`)"
+      - "traefik.http.routers.customersupport.entrypoints=web"
+      - "traefik.http.services.customersupport.loadbalancer.server.port=8084"
+      - "traefik.http.routers.customersupport.priority=100"
+    networks:
+      - sd
+
+  monitoring-service:
+    build: ./monitoring-service
+    depends_on:
+      - monitoring-db
+      - rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_DATASOURCE_URL: jdbc:postgresql://monitoring-db:5432/monitoring
+      PORT: 8083
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=sd"
+      - "traefik.http.routers.monitoring.rule=PathPrefix(`/monitoring`)"
+      - "traefik.http.routers.monitoring.entrypoints=web"
+      - "traefik.http.routers.monitoring.middlewares=basicauth"
+      - "traefik.http.services.monitoring.loadbalancer.server.port=8080"
+    networks:
+      - sd
+
+
+  person-service:
+    build: ./person-service
+    command: ["java", "-jar", "app.jar", "--spring.profiles.active=device"]
+    depends_on:
+      - person-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://person-db:5432/persons
+      PORT: 8080
+    networks:
+      - sd
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=sd"
+      - "traefik.http.routers.people.rule=PathPrefix(`/people`)"
+      - "traefik.http.routers.people.entrypoints=web"
+      - "traefik.http.routers.people.middlewares=basicauth"
+
+
+
+
+  device-service:
+    container_name: device-service
+    build: ./device-service
+    command: ["java", "-jar", "app.jar", "--spring.profiles.active=device"]
+    depends_on:
+      - device-db
+      - person-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://device-db:5432/devices
+      PERSON_SERVICE_URL: http://person-service:8080
+      PORT: 8081
+    networks:
+      - sd
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=sd"
+      - "traefik.http.routers.devices.rule=PathPrefix(`/devices`)"
+      - "traefik.http.routers.devices.entrypoints=web"
+      - "traefik.http.routers.devices.middlewares=basicauth"
+
+
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    depends_on:
+      - person-service
+      - device-service
+    networks:
+      - sd
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend.middlewares=basicauth"
+      - "traefik.http.routers.frontend.priority=1" # Lowest priority
+
+
+
+volumes:
+  person-db:
+  device-db:
+  monitoring-db:
+
+networks:
+  sd:
+    external: true
